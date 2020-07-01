@@ -1,0 +1,1355 @@
+<HTML>
+
+<HEAD>
+  <TITLE>dvdauthor HOWTO</TITLE>
+  <META NAME="keywords"
+   CONTENT="dvdauthor, dvd authoring">
+</HEAD>
+
+<BODY>
+
+<H1>dvdauthor HOWTO</H1>
+
+<P>
+  <A HREF="http://dvdauthor.sourceforge.net/">dvdauthor</A> is a
+  command line-based DVD authoring program.
+  There are many DVD authoring programs with a graphical interface,
+  but if you, like me, prefer the simplicity and predictability of the
+  command line -- or need to author lots of DVDs and would benefit
+  from being able to use automated scripts -- dvdauthor is the right
+  tool for you.
+</P>
+
+<H2>Contents</H2>
+<UL>
+  <LI><A HREF="#overview">DVD authoring overview</A>
+    <UL>
+      <LI><A HREF="#video">Creating video</A>
+      <LI><A HREF="#tracks">Editing tracks</A>
+      <LI><A HREF="#images">Building ISO images</A>
+      <LI><A HREF="#discs">Burning DVD discs</A>
+    </UL>
+  <LI><A HREF="#installing">Installing dvdauthor</A>
+  <LI><A HREF="#running">Running dvdauthor</A>
+    <UL>
+      <LI><A HREF="#example1">Example 1</A>
+      <LI><A HREF="#example2">Example 2</A>
+      <LI><A HREF="#example3">Example 3</A>
+    </UL>
+  <LI><A HREF="#menus">Building menus</A>
+    <UL>
+      <LI><A HREF="#example4">Example 4</A>
+      <LI><A HREF="#example5">Example 5</A>
+      <LI><A HREF="#example6">Example 6</A>
+    </UL>
+  <LI><A HREF="#spumux">spumux</A>
+    <UL>
+      <LI><A HREF="#example7">Example 7</A>
+      <LI><A HREF="#example8">Example 8</A>
+      <LI><A HREF="#example9">Example 9</A>
+      <LI><A HREF="#example10">Example 10</A>
+    </UL>
+  <LI><A HREF="#files">Files</A>
+    <UL>
+      <LI><A HREF="#clock">The clock</A>
+    </UL>
+</UL>
+
+<H2><A NAME="overview">DVD authoring overview</A></H2>
+<P>
+  dvdauthor is <EM>not</EM> a complete DVD authoring solution.
+  It performs one specific operation: take a set of audio and video
+  track files and build with them a directory tree compliant with the
+  DVD specification (from now on we'll call this "the DVD tree").
+  This is only one step in the procedure of going from the camera to
+  the finished DVD.
+  The other steps must be performed by other programs.
+<P>
+  The procedure could be summarized as follows:
+</P>
+<OL>
+  <LI>Create the raw video and audio footage.
+  <LI>Cut and edit the tracks that you want to put into the DVD.
+  <LI> Build the DVD tree.
+  <LI>Build the DVD image file in ISO format.
+  <LI>Burn the image to an actual disc.
+</OL>
+<P>
+  Step 3 is what dvdauthor does and is the main subject of this
+  HOWTO.
+  But before entering that, I'll also say a few words on the other
+  steps.
+  Since dvdauthor is a command line tool, I'm describing command line
+  tools for those too, but there are also graphical equivalents if you
+  prefer to use them.
+</P>
+
+<H3><A NAME="video">Creating video</A></H3>
+<P>
+  I haven't much to say on this -- if you're filming a live action
+  scene, any modern video recording equipment will save the recorded
+  footage to digital audio and video files ready for the next step
+  (the audio may be included into the video files or saved as separate
+  files).
+  If you're making an animation, there are many different methods and
+  tools that you could use, but that is beyond the scope of this HOWTO
+  (and well beyond my expertise).
+  In any case, you'll still have to convert your animation into audio
+  and video files.
+</P>
+
+<H3><A NAME="tracks">Editing tracks</A></H3>
+<P>
+  The most popular command line video editor
+  is <A HREF="https://ffmpeg.org/">ffmpeg</A>.
+  That's a powerful program that should be good for most purposes.
+<P>
+  I don't mean (and don't know enough) to write also a tutorial on
+  ffmpeg.
+  I'm just writing down the commands that I used to set up the video
+  tracks that I needed to build my DVDs.
+  Those may or may not be enough for your needs as well.
+<P>
+  In typical usage of ffmpeg, you'll specify one or more input files,
+  one output file, and any number of command line options by which you
+  tell ffmpeg what kind of processing to do.
+  Every input file must be preceded by a <TT>-i</TT> switch.
+  The encoding of each input and output file will generally be
+  inferred from the file's extension.
+  For example:
+</P>
+<PRE>
+  ffmpeg -i input.mp4 output.mpg
+</PRE>
+<P>
+  This will read an MPEG-4 video file and convert it to MPEG-2.
+<P>
+  To cut a section of a video, run this:
+</P>
+<PRE>
+  ffmpeg -ss 0:02:00 -i video.mp4 -t 0:03:00 -c copy track.mp4
+</PRE>
+<P>
+  The <TT>-ss 0:02:00</TT> argument tells ffmpeg to skip 2 minutes of
+  video, while the <TT>-t 0:03:00</TT> tells it to cut a 3-minutes
+  long section.
+  That is, the track that you're cutting starts at 2 minutes and ends
+  at 5 minutes since the beginning of the input video.
+  The <TT>-c copy</TT> tells ffmpeg to not recode the video (which it
+  does by default) but simply copy from the original.
+<P>
+  To recode a video into the format required by DVD, run this:
+</P>
+<PRE>
+  ffmpeg -i video.mp4 -target pal-dvd -aspect 16:9 video.mpg
+</PRE>
+<P>
+  If you live in a country where NTSC is the TV standard,
+  replace <TT>pal-dvd</TT> with <TT>ntsc-dvd</TT>.
+  That's most of America and a few Asian and Oceanian countries; the
+  rest of the world uses PAL.
+<P>
+  The <TT>-aspect</TT> argument sets the aspect ratio, that is, the
+  ratio between width and height of the video frame.
+  DVD videos can have either 4:3 or 16:9 aspect ratio.
+  If that doesn't match the dimensions of the screen on which the DVD
+  is played, either black strips will be displayed or the video will
+  be cropped.
+  Most recent screens have 16:9 aspect ratio, so I suggest to use
+  that.
+<P>
+  To force a lower bitrate than the default, so that you can fit a
+  longer video in the size of a DVD (at the price of some degradation
+  in the image quality), add the <TT>-b</TT> option:
+</P>
+<PRE>
+  ffmpeg -i video.mp4 -target pal-dvd -aspect 16:9 -b 4M video.mpg
+</PRE>
+<P>
+  <TT>4M</TT> means 4 Mb/s (Megabits per second).
+  You may also specify that as <TT>4000k</TT> or <TT>4000000</TT> (it
+  goes by multiples of 1000, not 1024).
+  According to my tests the default bitrate is 6 Mb/s.
+  That's the nominal bitrate; the actual rate can be somewhat
+  different.
+<P>
+  You can of course combine different options, for example this will
+  cut a section and recode into DVD format at the same time:
+</P>
+<PRE>
+  ffmpeg -ss 0:02:00 -i video.mp4 -target pal-dvd -aspect 16:9 -t 0:03:00 video.mpg
+</PRE>
+<P>
+  If you're running your video through multiple editing steps, I
+  recommend to keep the original resolution during all the
+  intermediate steps and only do the <TT>-target pal-dvd</TT> in the
+  final step.
+  This will minimize data loss.
+<P>
+  To build a video from a sequence of images (each image will be a
+  frame), run this:
+</P>
+<PRE>
+  ffmpeg -i image%03d.png -target pal-dvd -aspect 16:9 video.mpg
+</PRE>
+<P>
+  The argument <TT>-i image%03d.png</TT> tells ffmpeg to look for a
+  sequence of images called
+  <TT>image001.png</TT>, <TT>image002.png</TT>, <TT>image003.png</TT>,
+  and so on.
+  The <TT>%03d</TT> substring means that the numeric part of the
+  filename is a 3-digit number padded with zeros.
+  If the files were called
+  <TT>image01.png</TT>, <TT>image02.png</TT>, <TT>image03.png</TT>,
+  etc., the substring would be <TT>%02d</TT>.
+  (If you are familiar with the C language, you'll recognize the
+  printf-style syntax.)
+<P>
+  Having used <TT>-target pal-dvd</TT>, the generated video has 25
+  frames per second (with <TT>-target ntsc-dvd</TT> they would be
+  29.97).
+  You should take that into account when creating the sequence.
+<P>
+  If you want the video to have an associated audio, you can add an
+  input audio file on the command line:
+</P>
+<PRE>
+  ffmpeg -i image%03d.png -i audio.mp3 -target pal-dvd -aspect 16:9 video.mpg
+</PRE>
+<P>
+  If you don't, the video will be silent.
+<P>
+  You ought to know that DVDs have non-square pixels: the video
+  resolution of PAL (720x576 pixels) and NTSC (720x480) match neither
+  the 4:3 nor the 16:9 aspect ratio (they are, respectively, 5:4 and
+  3:2).
+  So the images that you see when watching the DVD will be stretched
+  or shrinked with respect to what you see when looking at the
+  original image files on the computer screen.
+  In order to handle that correctly and avoid unwanted distortions, I
+  suggest to create the images with the final aspect ratio with which
+  the DVD will be played (as written above, I recommend 16:9).
+  ffmpeg will rescale them automatically.
+<P>
+  To build a static video from a single image, run this:
+</P>
+<PRE>
+  ffmpeg -loop 1 -i image.png -target pal-dvd -aspect 16:9 -t 0:10 video.mpg
+</PRE>
+<P>
+  The <TT>-t 0:10</TT> tells ffmpeg to create a 10-seconds video.
+  With a fixed image as input, it is necessary to specify the
+  duration, otherwise ffmpeg couldn't know when to stop.
+  As above, you may add an input audio file.
+  A typical application for a static video would be the DVD menu
+  (although you may want to display an animated scene there as well).
+<P>
+  To overlay an image over a video, run this:
+</P>
+<PRE>
+  ffmpeg -i video.mpg -i image.png -filter_complex "[0:v][1:v] overlay" -target pal-dvd video+image.mpg
+</PRE>
+<P>
+  The image must have a transparent background or else it will
+  hide <EM>all</EM> the video.
+  ffmpeg accepts all the most common image encoding formats, but as
+  you need transparency, you must use a format that supports it.
+  Most notably, that excludes JPEG.
+<P>
+  To overlay the image only for the first 5 seconds, run this:
+</P>
+<PRE>
+  ffmpeg -i video.mpg -i image.png -filter_complex "[0:v][1:v] overlay=0:0:enable='between(t,0,5)'" -target pal-dvd video+image.mpg
+</PRE>
+<P>
+  You may use that for displaying a title at the start of a track.
+  Of course if you want to display it for more or less than 5 seconds
+  you can change the number.
+  The <TT>0:0</TT> tells ffmpeg where to position the image (if you
+  specify numbers different from 0, the image will be offset).
+  It is apparently required for ffmpeg to read correctly
+  the <TT>enable</TT> part.
+</P>
+
+<H3><A NAME="images">Building ISO images</A></H3>
+<P>
+  An ISO image file is the preferred format for data to be written on
+  a CD or DVD disc.
+  It's an archive that may contain any number of files and
+  directories.
+  In the case of a Video DVD, the contents must be a valid DVD tree,
+  such as those created by dvdauthor.
+<P>
+  The command line tool for building ISO images is genisoimage.
+  There is still around some older documentation that mentions
+  mkisofs; that was the predecessor of genisoimage.
+  The latter is what you'll find in any recent GNU/Linux
+  distribution.
+<P>
+The command line to build a DVD Video ISO image is this:
+</P>
+<PRE>
+  genisoimage -v -dvd-video -V "example01" -o example01.iso example01
+</PRE>
+<P>
+  The <TT>-v</TT> argument means "verbose".
+  It tells genisoimage to display progress information while creating
+  the ISO image.
+  If you don't want that, you can omit it.
+  The <TT>-dvd-video</TT> argument tells genisoimage to make sure that
+  the generated ISO image is compliant with the DVD Video
+  specification, otherwise your DVD player might not be able to read
+  it.
+  The <TT>-V "example01"</TT> sets the volume label of the image.
+  This is a string where you can put a label that identifies the image
+  contents.
+  It can be up to 32 characters long.
+  The quotes are required if it contains spaces or special characters,
+  otherwise they may be omitted.
+  The <TT>-o</TT> switch lets you specify the name of the image file.
+  The last argument is the name of the directory whose contents will
+  be copied into the image.
+</P>
+
+<H3><A NAME="discs">Burning DVD discs</A></H3>
+<P>
+  The command line tool for burning CDs and DVDs is wodim (Write
+  Optical DIsk Media).
+  It is also the successor of an older program.
+  I think it was called cdrecord, but it's been a few years so I am
+  not sure I remember correctly.
+<P>
+  The command line for writing a disc is this:
+</P>
+<PRE>
+  wodim -v dev=/dev/sr0 image.iso
+</PRE>
+<P>
+  The <TT>-v</TT> switch means "verbose".
+  It tells wodim to display progress information while burning the
+  disc.
+  If you don't want that, you can omit it.
+  The <TT>dev=/dev/sr0</TT> argument tells wodim the device name of
+  the DVD burner.
+  <TT>/dev/sr0</TT> is how it's called on my computer.
+  On yours it may be different.
+  If you don't know what it is and want to find out, insert a
+  (non-blank) DVD into the drive and mount it, then run <TT>df</TT>
+  and look for it in the output: the <TT>Filesystem</TT> column is
+  where you'll find the device name.
+  The last argument is the name of the ISO image to be written on the
+  disc.
+<P>
+  If you want to burn the image on a rewritable disc (which is a good
+  way to test your DVDs without throwing away a disc every time you
+  get anything wrong), if it already contains data you must blank it
+  first.
+  To do that, run this:
+</P>
+<PRE>
+  wodim -v dev=/dev/sr0 blank=fast
+</PRE>
+<P>
+  I must say that on my computer, this works for CDs, but for DVDs it
+  writes an error message and refuses to blank the disc.
+  I couldn't find what the problem is.
+  It may or may not work for you.
+</P>
+
+<H2><A NAME="installing">Installing dvdauthor</A></H2>
+<P>
+  dvdauthor should be available in any of the most common GNU/Linux
+  distributions, thus it can be installed using the standard tools
+  (aptitude on Debian and Ubuntu, yum on Fedora, etc.).
+  In fact, it may even be already installed on your computer.
+  It was on mine.
+  I run Debian GNU/Linux with the Gnome desktop, and dvdauthor was
+  pulled in as a dependency of brasero (Gnome CD/DVD burner).
+</P>
+
+<H2><A NAME="running">Running dvdauthor</A></H2>
+<P>
+  When I tried running dvdauthor, at first I couldn't make it work.
+  It kept writing this message and then failing at some stage, leaving
+  an incomplete DVD tree:
+</P>
+<PRE>
+  INFO: no default video format, must explicitly specify NTSC or PAL
+</PRE>
+<P>
+  (As I've already written above, NTSC is the TV standard in most of
+  America and a few Asian and Oceanian countries; the rest of the
+  world uses PAL.)
+<P>
+  I finally got rid of that by creating a configuration file that
+  tells dvdauthor what my default video format is.
+  This is how I did it:
+</P>
+<PRE>
+  echo PAL > $HOME/.config/video_format
+</PRE>
+<P>
+  Later, I discovered that another way is to set
+  the <TT>VIDEO_FORMAT</TT> environment variable.
+  If you're running bash as your command line shell, you can add this
+  line to your <TT>$HOME/.bashrc</TT> file (otherwise, use the
+  equivalent syntax and configuration file for your shell of choice):
+</P>
+<PRE>
+  export VIDEO_FORMAT=PAL
+</PRE>
+<P>
+  Do what you prefer.
+<P>
+  And now let's see how to actually use dvdauthor:
+<P>
+  You can tell it what to do either via command line arguments,
+  or via a control file in XML format.
+  The latter way is more flexible and configurable, or at least I
+  didn't discover how to do the same things with the former.
+  Anyway, I'll present a few examples of both.
+<P>
+  I'll start with a minimal example, then gradually add more
+  features.
+<P>
+  All the files needed to try these examples on your computer can be
+  downloaded from <A HREF="#files">the Files section</A> of this
+  document.
+</P>
+
+<H3><A NAME="example1">Example 1</A></H3>
+<P>
+  The simplest DVD that you can build contains just one video track
+  and no menu.
+  When you insert the disc into the DVD reader, it starts playing the
+  track and stops when it's finished.
+<P>
+  You can build it simply by typing these on the command line:
+</P>
+<PRE>
+  dvdauthor -o example01 -t track01.mpg
+  dvdauthor -o example01 -T
+</PRE>
+<P>
+  The first line creates the DVD tree and writes the track there.
+  The second creates the DVD's table of contents files.
+<P>
+  A DVD tree is a directory that contains two directories
+  called <TT>AUDIO_TS</TT> and <TT>VIDEO_TS</TT>.
+  If you're making a video DVD, <TT>AUDIO_TS</TT> will be empty
+  and <TT>VIDEO_TS</TT> will contain all the relevant files (tracks
+  etc.).
+  If you're making an audio DVD, it'll be the opposite.
+  (This HOWTO shows how to make video DVDs; I didn't investigate
+  whether dvdauthor can build audio DVDs too.)
+<P>
+  The <TT>-o example01</TT> tells dvdauthor to write the DVD tree to a
+  directory called <TT>example01</TT>; of course you can change the
+  name to anything you like.
+  The directory will be created if it doesn't exist.
+  In fact, it is <EM>not</EM> recommended to run dvdauthor on an
+  existing directory.
+  If it exists as a leftover of a previous attempt, you should delete
+  it using this command:
+</P>
+<PRE>
+  dvddirdel -o example01
+</PRE>
+<P>
+  dvddirdel is a utility distributed together with dvdauthor.
+  The directory could also be deleted via the usual <TT>rm -rf</TT>
+  command, however the dvdauthor documentation recommends using
+  dvddirdel.
+  In order to prevent accidentally deleting the wrong directory,
+  dvddirdel checks for a valid DVD tree structure, and refuses to do
+  anything if it doesn't find it.
+  It also refuses to do anything if you forget the <TT>-o</TT> switch
+  before the directory name (I got hit by this a few times).
+<P>
+  <TT>track01.mpg</TT> is, of course, the name of the video track
+  file.
+  Again, you can change it to anything you like.
+  The sample file provided with this HOWTO (see <A HREF="#files">the
+  Files section</A>) shows a simple clock ticking for 15 seconds, with
+  a short sound (a "beep") at every move of the hand.
+<P>
+  After running the above commands, <TT>ls -R example01</TT> should
+  give you this:
+</P>
+<PRE>
+  example01:
+  AUDIO_TS  VIDEO_TS
+
+  example01/AUDIO_TS:
+
+  example01/VIDEO_TS:
+  VIDEO_TS.BUP  VIDEO_TS.IFO  VTS_01_0.BUP  VTS_01_0.IFO  VTS_01_1.VOB
+</PRE>
+<P>
+  <TT>VTS_01_1.VOB</TT> contains the video track.
+  If that is larger than 1 GB, it will be split into multiple files of
+  (slightly less than) 1 GB each.
+  The additional files will be
+  called <TT>VTS_01_2.VOB</TT>, <TT>VTS_01_3.VOB</TT>, and so on.
+  Usually there is also a file called <TT>VIDEO_TS.VOB</TT> containing
+  the video track for the DVD menu.
+  In this example there is no menu, so this file is missing.
+  The other files contain other informations required by the DVD
+  player; the <TT>*.BUP</TT> files are backup copies of
+  the <TT>*.IFO</TT> files.
+<P>
+  If everything worked as expected, now you can run genisoimage to
+  build the DVD image (see <A HREF="#images">above</A>), burn it to a
+  disc (<A HREF="#discs">ditto</A>), and try it on your DVD reader.
+  You may also download and try the prebuilt
+  image <TT>example01.iso</TT> from <A HREF="#files">the Files
+  section</A>.
+  The files in your DVD tree should be byte-for-byte identical to
+  those contained there.
+<P>
+  You can obtain the same result by running dvdauthor with this
+  control file:
+</P>
+<PRE>
+  &lt;dvdauthor dest="example01">
+    &lt;vmgm />
+    &lt;titleset>
+      &lt;titles>
+	&lt;pgc>
+          &lt;vob file="track01.mpg" />
+	&lt;/pgc>
+      &lt;/titles>
+    &lt;/titleset>
+  &lt;/dvdauthor>
+</PRE>
+<P>
+  The syntax to run dvdauthor with a control file is this:
+</P>
+<PRE>
+  dvdauthor -x example01.xml
+</PRE>
+<P>
+  The target directory is specified by the <TT>dest</TT> attribute in
+  the control file.
+  Alternatively, you can omit the attribute and specify the target
+  directory on the command line via the <TT>-o</TT> switch.
+  If you specify both, the command line argument takes precedence.
+  Other command line switches (<TT>-t</TT>, <TT>-T</TT> etc.) can't be
+  used together with <TT>-x</TT>.
+<P>
+  I assume that you have at least basic knowledge of XML -- what's a
+  tag, what's an attribute, an so on.
+  After all, we're well into the 21st century and XML should now be
+  the format of choice for almost any kind of textual data.
+<P>
+  The <TT>&lt;vmgm></TT> tag contains the definition of the main menu
+  of the DVD.
+  In this example there is no menu, so the tag is empty; however it
+  must be there.
+  The <TT>&lt;titleset></TT> tag contains the definition of the DVD's
+  titleset.
+  A titleset is where a set of tracks and its associated material is
+  stored.
+  In the following we'll see more examples of things that can be put
+  into a titleset.
+  A DVD may also have more than one titleset; we'll see an example of
+  that too.
+</P>
+
+<H3><A NAME="example2">Example 2</A></H3>
+<P>
+  Normally, DVDs are split into multiple "chapters", that is, track
+  sections.
+  That allows you to skip portions of the video and jump to specific
+  points.
+  In this example, there's still no menu, so you can't actually select
+  a chapter when you insert the disc into the reader, but you can move
+  forward and backward between chapters using the remote control.
+<P>
+  dvdauthor will create a DVD with multiple chapters if you specify
+  multiple track files on the command line.
+  Every track file will be a chapter.
+  Simply write the file names one after another on the command line:
+</P>
+<PRE>
+  dvdauthor -o example02 -t track01.mpg track02.mpg track03.mpg track04.mpg
+  dvdauthor -o example02 -T
+</PRE>
+<P>
+  In this example there are four chapters, but there can be any number
+  up to 99.
+  You can again download sample track files from <A HREF="#files">the Files
+  section</A> (that holds also for all the following examples, but
+  this is the last time I'm repeating it).
+  The first file is the same used in the previous example.
+  Together those tracks show a simple clock ticking for a full minute;
+  each of them is a 15-seconds section.
+  Some DVD players might pause for a fraction of a second between
+  tracks.
+<P>
+  The control file that gives the same result is very similar to that
+  in the previous example.
+  Just add a <TT>&lt;vob></TT> tag for each track:
+</P>
+<PRE>
+  &lt;dvdauthor dest="example02">
+    &lt;vmgm />
+    &lt;titleset>
+      &lt;titles>
+	&lt;pgc>
+          &lt;vob file="track01.mpg" />
+          &lt;vob file="track02.mpg" />
+          &lt;vob file="track03.mpg" />
+          &lt;vob file="track04.mpg" />
+	&lt;/pgc>
+      &lt;/titles>
+    &lt;/titleset>
+  &lt;/dvdauthor>
+</PRE>
+
+<H3><A NAME="example3">Example 3</A></H3>
+<P>
+  A more flexible way to split a DVD into multiple chapters is to tell
+  dvdauthor explicitly at which time you want each chapter to begin.
+  This can be done with the <TT>-c</TT> command line switch:
+</P>
+<PRE>
+  dvdauthor -o example03 -t -c 0,0:10 track01.mpg -c 0:05 track02.mpg -c 0,0:10 track03.mpg -c 0:05 track04.mpg
+  dvdauthor -o example03 -T
+</PRE>
+<P>
+  Each <TT>-c</TT> switch is applied to the track file immediately
+  following it.
+  The time is counted from the beginning of the track -- <EM>not</EM>
+  the beginning of the DVD.
+  If any chapters are set explicitly, dvdauthor will <EM>not</EM>
+  automatically start a new chapter with every track.
+<P>
+  So this DVD has six chapters: the first starts at the beginning of
+  the first track -- this one must always be there and dvdauthor will
+  set it even if you don't specify it.
+  The second chapter starts after 10 seconds.
+  The third starts 5 seconds into the second track, that is, 20
+  seconds after the beginning of the DVD (this is assuming that you're
+  using again my sample tracks, which are 15-seconds long).
+  And a bit of math will show you that the fourth, fifth and sixth
+  tracks start at 30, 40 and 50 seconds.
+  In other words, this video is split into 10-seconds sections.
+<P>
+  In fact, when you play this DVD, you might notice that the chapters
+  don't begin <EM>exactly</EM> every 10 seconds.
+  That's because of how videos are encoded: for technical reasons it
+  isn't possible to start playing at any time, but only at selected
+  frames called P frames (P stands for "principal").
+  The beginning of each chapter will be set as close as possible to
+  the specified point.
+<P>
+  To do the same with a control file, you can add
+  the <TT>chapters</TT> attribute to <TT>&lt;vob></TT> tags:
+</P>
+<PRE>
+  &lt;dvdauthor dest="example03">
+    &lt;vmgm />
+    &lt;titleset>
+      &lt;titles>
+	&lt;pgc>
+          &lt;vob file="track01.mpg" chapters="0,0:10" />
+          &lt;vob file="track02.mpg" chapters="0:05" />
+          &lt;vob file="track03.mpg" chapters="0,0:10" />
+          &lt;vob file="track04.mpg" chapters="0:05" />
+	&lt;/pgc>
+      &lt;/titles>
+    &lt;/titleset>
+  &lt;/dvdauthor>
+</PRE>
+
+<H2><A NAME="menus">Building menus</A></H2>
+<P>
+  Now we'll see how to create DVDs with menus.
+<P>
+  From now on, I'll use exclusively control files because I couldn't
+  find how to create menus with command line arguments.
+  The switch for doing that should be <TT>-m</TT> but I haven't been
+  able to find the correct syntax.
+  If you find it, I'd like to know.
+</P>
+
+<H3><A NAME="example4">Example 4</A></H3>
+<P>
+  This is the simplest example (except for the <TT>dest</TT>
+  attribute, which may be omitted as explained in Example 1) of a
+  control file that defines a menu:
+</P>
+<PRE>
+  &lt;dvdauthor dest="example04">
+    &lt;vmgm>
+      &lt;menus>
+	&lt;pgc>
+          &lt;vob file="menu1.mpg" />
+	&lt;/pgc>
+      &lt;/menus>
+    &lt;/vmgm>
+    &lt;titleset>
+      &lt;titles>
+	&lt;pgc>
+          &lt;vob file="track01.mpg" />
+	&lt;/pgc>
+      &lt;/titles>
+    &lt;/titleset>
+  &lt;/dvdauthor>
+</PRE>
+<P>
+  It is, in fact, <EM>too</EM> simple.
+  If you create a DVD from this, you'll find that after playing the
+  menu, it just stops.
+  There is no way to get to play the track!
+</P>
+
+<H3><A NAME="example5">Example 5</A></H3>
+<P>
+  To get past the menu, you must tell dvdauthor what to do when it's
+  finished.
+  This is how you can do that:
+</P>
+<PRE>
+  &lt;dvdauthor dest="example05">
+    &lt;vmgm>
+      &lt;menus>
+	&lt;pgc>
+          &lt;vob file="menu1.mpg" />
+          &lt;post>jump title 1;&lt;/post>
+	&lt;/pgc>
+      &lt;/menus>
+    &lt;/vmgm>
+    &lt;titleset>
+      &lt;titles>
+	&lt;pgc>
+          &lt;vob file="track01.mpg" />
+          &lt;post>call vmgm menu;&lt;/post>
+	&lt;/pgc>
+      &lt;/titles>
+    &lt;/titleset>
+  &lt;/dvdauthor>
+</PRE>
+<P>
+  The <TT>&lt;post></TT> tag specifies an action to be performed after
+  the tracks in the menu or title have been played.
+  <TT>jump title 1;</TT> tells dvdauthor that after playing the menu,
+  it must go to the first title of the DVD (a DVD might contain
+  multiple titles; we'll see that later).
+  That is, when the menu is finished the track will start.
+<P>
+  The second <TT>&lt;post></TT> tag specifies what to do after the
+  track has been played too.
+  <TT>call vmgm menu;</TT> tells dvdauthor to go back to play the
+  menu.
+  So this DVD will loop between the menu and the track until you stop
+  it.
+<P>
+  What's the difference between <TT>jump</TT> and <TT>call</TT>?
+  I'm not sure.
+  It seems that <TT>jump</TT> can't be used at the end of a
+  title, so <TT>call</TT> must be used there.
+  In all other places <TT>jump</TT> seems to work.
+</P>
+
+<H3><A NAME="example6">Example 6</A></H3>
+<P>
+  The menu defined within a <TT>&lt;vmgm></TT> tag is the main menu of
+  the DVD.
+  But DVDs can have more than just one menu.
+  Indeed, each titleset may have its own menu too.
+<P>
+  To define a titleset menu, just put the <TT>&lt;menus></TT> tag into
+  the <TT>&lt;titleset></TT> tag:
+</P>
+<PRE>
+  &lt;dvdauthor dest="example06">
+    &lt;vmgm />
+    &lt;titleset>
+      &lt;menus>
+	&lt;pgc>
+          &lt;vob file="menu1.mpg" />
+          &lt;post>jump title 1;&lt;/post>
+	&lt;/pgc>
+      &lt;/menus>
+      &lt;titles>
+	&lt;pgc>
+          &lt;vob file="track01.mpg" />
+          &lt;post>call menu;&lt;/post>
+	&lt;/pgc>
+      &lt;/titles>
+    &lt;/titleset>
+  &lt;/dvdauthor>
+</PRE>
+<P>
+  In this example there is no main menu (empty <TT>&lt;vmgm></TT>
+  tag).
+  Thus the DVD will start playing directly from the titleset menu, and
+  will loop between menu and track like the previous example.
+  Note that the second <TT>&lt;post></TT> tag is slightly
+  different here: <TT>call menu;</TT> (this titleset's menu) instead
+  of <TT>call vmgm menu;</TT> (the main menu).
+<P>
+  What's the difference between main menu and titleset menu?
+  For one, the "menu" button of my DVD player's remote control goes to
+  the titleset menu.
+  If there is only a main menu, pressing the button makes the player
+  display an "invalid entry" message.
+  There seems to be no way to go back to the main menu except via
+  a <TT>&lt;post></TT> tag (which means that you must get to the end
+  of the title first).
+  I don't know whether that is true of all players.
+<P>
+  Another difference is that some actions can be called in one kind of
+  menu and not in the other.
+  For example, it seems that you can only jump to a specified chapter
+  from the titleset menu -- from the main menu you can only start a
+  title from the beginning.
+  And when an action can be performed from both menus, the syntax may
+  be different.
+<P>
+  I didn't find anywhere a complete documentation of what can or
+  cannot be done.
+  If you try doing something that isn't allowed, dvdauthor will exit
+  and print an error message.
+  In the following I'll show some examples that worked for me.
+</P>
+
+<H2><A NAME="spumux">spumux</A></H2>
+<P>
+  The menus we've seen in the previous examples are in fact no more
+  than short tracks that play before other tracks, but don't let you
+  select any actions.
+  To build a "real" menu, one that actually lets you navigate the DVD,
+  you must define buttons.
+  For that purpose, with dvdauthor comes a tool called spumux.
+<P>
+  Like dvdauthor, spumux works with an XML control file, but the
+  command line syntax is different.
+  You must not prepend <TT>-o</TT> to the file name, and must feed the
+  input and output file through I/O redirection:
+</P>
+<PRE>
+  spumux control.xml < video.mpg > video-with-buttons.mpg
+</PRE>
+<P>
+  Each button takes a rectangular area on the screen.
+  When playing the DVD on your computer, you can activate the button
+  by clicking there with the mouse; while on a DVD player, you can
+  move between buttons and press them with the remote control.
+<P>
+  To add buttons to a video, you need three images.
+  One shows the default appearance of the buttons, another shows the
+  appearance of the buttons when they're being highlighted, and the
+  third shows their appearance when they're pressed.
+  Of course only one button can be highlighted or pressed at a time,
+  but in those images you must draw them all highlighted or all
+  pressed.
+  When the video will be played and any button will be selected, the
+  corresponding portion of the image will be displayed.
+  The dimensions of the images should match the DVD resolution, that
+  is, 720x576 for PAL or 720x480 for NTSC.
+<P>
+  spumux has a feature to autodetect buttons in the image.
+  This is a control file that uses it:
+</P>
+<PRE>
+  &lt;subpictures>
+    &lt;stream>
+      &lt;spu force="yes"
+           image="menu2i.png" highlight="menu2h.png" select="menu2s.png"
+           autooutline="infer" outlinewidth="6" autoorder="rows">
+      &lt;/spu>
+    &lt;/stream>
+  &lt;/subpictures>
+</PRE>
+<P>
+  <TT>force="yes"</TT> must always be specified because, technically,
+  the buttons are implemented as subtitles.
+  DVD players let you choose whether to display subtitles or not.
+  The <TT>force</TT> attribute overrides that and tells the player to
+  always display the buttons, otherwise the menu would not function
+  correctly.
+<P>
+  The three attributes <TT>image</TT>, <TT>highlight</TT>
+  and <TT>select</TT> specify the names of the three images that
+  define the buttons appearance, as described above (<TT>image</TT>
+  defines the default appearance).
+<P>
+  The other attributes tell spumux to autodetect the buttons.
+  It does so by inspecting the three images and looking for matching
+  rectangular areas surrounded by a transparent outline at least 6
+  pixels wide (that's specified by the <TT>outlinewidth</TT>
+  attribute).
+  An outline of suitable width is necessary if the button image is a
+  string of text, otherwise spumux may identify every letter as a
+  distinct button.
+  Finally, the <TT>autoorder</TT> attribute specifies how to sort the
+  buttons: by rows of by columns.
+  You'll need to know the button ordering when you associate an action
+  to each of them -- we'll see that in the next examples.
+<P>
+  The autodetect feature is quite handy but, being a control freak, I
+  prefer to specify the buttons positions explicitly.
+  This is how to do that:
+</P>
+<PRE>
+  &lt;subpictures>
+    &lt;stream>
+      &lt;spu force="yes"
+           image="menu2i.png" highlight="menu2h.png" select="menu2s.png">
+	&lt;button x0="0" y0="440" x1="720" y1="504" />
+      &lt;/spu>
+    &lt;/stream>
+  &lt;/subpictures>
+</PRE>
+<P>
+  A single button is defined here.
+  The <TT>x0</TT>, <TT>y0</TT>, <TT>x1</TT> and <TT>y1</TT> attributes
+  set the coordinates of the button box.
+  I find it convenient to specify a larger rectangle than the actual
+  button image: this facilitates pointing the mouse at it when playing
+  the DVD on your computer.
+  In particular, this button takes the entire width of the DVD screen
+  (720 pixels).
+  Of course it's up to you to follow that or not.
+<P>
+  To define more buttons, use multiple <TT>&lt;button></TT> tags:
+</P>
+<PRE>
+  &lt;subpictures>
+    &lt;stream>
+      &lt;spu force="yes"
+           image="menu3i.png" highlight="menu3h.png" select="menu3s.png">
+	&lt;button x0="0" y0="258" x1="720" y1="312" />
+	&lt;button x0="0" y0="312" x1="720" y1="376" />
+	&lt;button x0="0" y0="376" x1="720" y1="440" />
+	&lt;button x0="0" y0="440" x1="720" y1="504" />
+      &lt;/spu>
+    &lt;/stream>
+  &lt;/subpictures>
+</PRE>
+<P>
+  The latter two control files were used to create the
+  files <TT>menu2.mpg</TT> and <TT>menu3.mpg</TT> that are used in the
+  following examples.
+  You can run the corresponding DVDs to see how the result looks
+  like.
+<P>
+  There is a severe limitation on the number of colors of the button
+  images: you can use only up to four (transparent background
+  included).
+  I am not sure whether this is dictated by the DVD specification or
+  is a deficiency of spumux.
+<P>
+  Anyway, that requires that if your buttons include written text, it
+  must <EM>not</EM> be rendered with font antialiasing.
+  That is a technique by which pixels on the edges of each letter are
+  blended with the background color in order to make the letter look
+  smoother.
+  Most text fonts are designed to be used with antialiasing.
+  But if you use that, the blended pixels will have different colors
+  (potentially each pixel might have a different blend) and thus you
+  are almost sure to run out of the 4-colors limit.
+  (To be exact, if the background is transparent, what's different is
+  actually the pixel's alpha value, while the RGB values are equal.
+  But that still counts as different colors.)
+<P>
+  When you create the button images, you can tell the program you're
+  using (e.g., <A HREF="https://www.gimp.org/">the GIMP</A>) to use
+  non-antialiased text, but when I tried that, I wasn't satisfied by
+  the result: especially if the menu screen contains other text, the
+  difference is very noticeable and aesthetically unpleasant.
+  (There is also an issue with subtitle scaling with my DVD player
+  that makes it even worse.)
+  So, for my own DVDs and in the examples of this HOWTO, I chose to
+  insert all text into the background image and to use as "button
+  image" a colored box that frames the text.
+  You may prefer a different solution.
+</P>
+
+<H3><A NAME="example7">Example 7</A></H3>
+<P>
+  Having added one or more buttons to the menu video file with spumux,
+  you can specify the action associated to each button by inserting
+  a <TT>&lt;button></TT> tag into the <TT>&lt;menus></TT> tag:
+</P>
+<PRE>
+  &lt;dvdauthor dest="example07">
+    &lt;vmgm />
+    &lt;titleset>
+      &lt;menus>
+	&lt;pgc>
+          &lt;vob file="menu2.mpg" />
+          &lt;button>jump title 1;</button>
+          &lt;post>jump titleset 1 menu;</post>
+	&lt;/pgc>
+      &lt;/menus>
+      &lt;titles>
+	&lt;pgc>
+          &lt;vob file="track01.mpg" />
+          &lt;post>call menu;</post>
+	&lt;/pgc>
+      &lt;/titles>
+    &lt;/titleset>
+  &lt;/dvdauthor>
+</PRE>
+<P>
+  In this example a single button is defined (thus it will always be
+  shown as highlighted), and the track will be played when you press
+  it.
+  Note how, different from the previous examples,
+  the <TT>&lt;post></TT> action is to jump back to the menu; that is,
+  the menu will be played in a loop until you press the button.
+</P>
+
+<H3><A NAME="example8">Example 8</A></H3>
+<P>
+  To define multiple buttons, add multiple <TT>&lt;button></TT> tags.
+  They are associated to the buttons matching the order in which they
+  were defined by spumux:
+</P>
+<PRE>
+  &lt;dvdauthor dest="example08">
+    &lt;vmgm />
+    &lt;titleset>
+      &lt;menus>
+	&lt;pgc>
+          &lt;vob file="menu3.mpg" />
+          &lt;button>jump title 1 chapter 1;</button>
+          &lt;button>jump title 1 chapter 2;</button>
+          &lt;button>jump title 1 chapter 3;</button>
+          &lt;button>jump title 1 chapter 4;</button>
+          &lt;post>jump titleset 1 menu;</post>
+	&lt;/pgc>
+      &lt;/menus>
+      &lt;titles>
+	&lt;pgc>
+          &lt;vob file="track01.mpg" />
+          &lt;vob file="track02.mpg" />
+          &lt;vob file="track03.mpg" />
+          &lt;vob file="track04.mpg" />
+          &lt;post>jump title 1;</post>
+	&lt;/pgc>
+      &lt;/titles>
+    &lt;/titleset>
+  &lt;/dvdauthor>
+</PRE>
+<P>
+  Note how the second <TT>&lt;post></TT> tag does not go back to the
+  menu, like the previous examples did, but restarts the title.
+  That is, the clock will keep ticking until you stop it.
+<P>
+  When you play this DVD on your reader, you'll see that when the menu
+  video ends, it is restarted, but the currently active button is
+  reset.
+  For this reason, the menu video should have a sufficient length to
+  give the user enough time to select an entry with ease.
+  For a simple menu like this, I think 30 seconds should be adequate,
+  so this is what I did.
+  Your mileage may vary.
+</P>
+
+<H3><A NAME="example9">Example 9</A></H3>
+<P>
+  In this example we define two menus, a main menu and a titleset
+  menu.
+  The former lets you either go to the titleset menu or start playing
+  the tracks; the latter lets you choose among individual chapters.
+  This setup matches what many real DVDs provide.
+</P>
+<PRE>
+  &lt;dvdauthor dest="example09">
+    &lt;vmgm>
+      &lt;menus>
+	&lt;pgc>
+          &lt;vob file="menu4.mpg" />
+          &lt;button>jump titleset 1 menu;</button>
+          &lt;button>jump title 1;</button>
+          &lt;post>jump menu 1;</post>
+	&lt;/pgc>
+      &lt;/menus>
+    &lt;/vmgm>
+    &lt;titleset>
+      &lt;menus>
+	&lt;pgc>
+          &lt;vob file="menu3.mpg" />
+          &lt;button>jump title 1 chapter 1;</button>
+          &lt;button>jump title 1 chapter 2;</button>
+          &lt;button>jump title 1 chapter 3;</button>
+          &lt;button>jump title 1 chapter 4;</button>
+          &lt;post>jump titleset 1 menu;</post>
+	&lt;/pgc>
+      &lt;/menus>
+      &lt;titles>
+	&lt;pgc>
+          &lt;vob file="track01.mpg" />
+          &lt;vob file="track02.mpg" />
+          &lt;vob file="track03.mpg" />
+          &lt;vob file="track04.mpg" />
+          &lt;post>call vmgm menu;</post>
+	&lt;/pgc>
+      &lt;/titles>
+    &lt;/titleset>
+  &lt;/dvdauthor>
+</PRE>
+
+<H3><A NAME="example10">Example 10</A></H3>
+<P>
+  And this is a DVD with two titlesets.
+  The first titleset shows the usual clock; the second shows the clock
+  running backwards.
+</P>
+<PRE>
+  &lt;dvdauthor dest="example10">
+    &lt;vmgm>
+      &lt;menus>
+	&lt;pgc entry="title">
+          &lt;vob file="menu5.mpg" />
+          &lt;button>jump title 1;</button>
+          &lt;button>jump title 2;</button>
+          &lt;post>jump menu 1;</post>
+	&lt;/pgc>
+      &lt;/menus>
+    &lt;/vmgm>
+    &lt;titleset>
+      &lt;titles>
+	&lt;pgc>
+          &lt;vob file="track01.mpg" />
+          &lt;vob file="track02.mpg" />
+          &lt;vob file="track03.mpg" />
+          &lt;vob file="track04.mpg" />
+          &lt;post>call vmgm menu;</post>
+	&lt;/pgc>
+      &lt;/titles>
+    &lt;/titleset>
+    &lt;titleset>
+      &lt;titles>
+	&lt;pgc>
+          &lt;vob file="track05.mpg" />
+          &lt;vob file="track06.mpg" />
+          &lt;vob file="track07.mpg" />
+          &lt;vob file="track08.mpg" />
+          &lt;post>call vmgm menu;</post>
+	&lt;/pgc>
+      &lt;/titles>
+    &lt;/titleset>
+  &lt;/dvdauthor>
+</PRE>
+<P>
+  It's worth noting that, in this case, <TT>ls -R example10</TT> will
+  give you this:
+</P>
+<PRE>
+  example10:
+  AUDIO_TS  VIDEO_TS
+
+  example10/AUDIO_TS:
+
+  example10/VIDEO_TS:
+  VIDEO_TS.BUP  VIDEO_TS.VOB  VTS_01_0.IFO  VTS_02_0.BUP  VTS_02_1.VOB
+  VIDEO_TS.IFO  VTS_01_0.BUP  VTS_01_1.VOB  VTS_02_0.IFO
+</PRE>
+<P>
+  The <TT>VTS_01_*</TT> files belong to the first titleset;
+  the <TT>VTS_02_*</TT> files belong to the second.
+<P>
+  That's all -- I think I've told you everything I've learned.
+  From these examples you should be able to build more complex
+  setups.
+  I hope you will find this HOWTO useful.
+</P>
+
+<H2><A NAME="files">Files</A></H2>
+<P>
+  These are all the files needed to try the examples:
+</P>
+<UL>
+  <LI>Track files:
+    <TT><A href="track01.mpg">track01.mpg</A></TT>
+    <TT><A href="track02.mpg">track02.mpg</A></TT>
+    <TT><A href="track03.mpg">track03.mpg</A></TT>
+    <TT><A href="track04.mpg">track04.mpg</A></TT>
+    <TT><A href="track05.mpg">track05.mpg</A></TT>
+    <TT><A href="track06.mpg">track06.mpg</A></TT>
+    <TT><A href="track07.mpg">track07.mpg</A></TT>
+    <TT><A href="track08.mpg">track08.mpg</A></TT>
+</UL>
+<UL>
+  <LI>Menu files:
+    <TT><A href="menu1.mpg">menu1.mpg</A></TT>
+    <TT><A href="menu2.mpg">menu2.mpg</A></TT>
+    <TT><A href="menu3.mpg">menu3.mpg</A></TT>
+    <TT><A href="menu4.mpg">menu4.mpg</A></TT>
+    <TT><A href="menu5.mpg">menu5.mpg</A></TT>
+</UL>
+<UL>
+  <LI>Sample ISO image:
+    <TT><A href="example01.iso">example01.iso</A></TT>
+</UL>
+<UL>
+  <LI>dvdauthor control files:
+    <TT><A href="example01.xml">example01.xml</A></TT>
+    <TT><A href="example02.xml">example02.xml</A></TT>
+    <TT><A href="example03.xml">example03.xml</A></TT>
+    <TT><A href="example04.xml">example04.xml</A></TT>
+    <TT><A href="example05.xml">example05.xml</A></TT>
+    <TT><A href="example06.xml">example06.xml</A></TT>
+    <TT><A href="example07.xml">example07.xml</A></TT>
+    <TT><A href="example08.xml">example08.xml</A></TT>
+    <TT><A href="example09.xml">example09.xml</A></TT>
+    <TT><A href="example10.xml">example10.xml</A></TT>
+</UL>
+<UL>
+  <LI>spumux control files:
+    <TT><A href="spumux1.xml">spumux1.xml</A></TT>
+    <TT><A href="spumux2.xml">spumux2.xml</A></TT>
+    <TT><A href="spumux3.xml">spumux3.xml</A></TT>
+    <TT><A href="spumux4.xml">spumux4.xml</A></TT>
+    <TT><A href="spumux5.xml">spumux5.xml</A></TT>
+</UL>
+<UL>
+  <LI>Button images:
+    <TT><A href="menu2i.png">menu2i.png</A></TT>
+    <TT><A href="menu2h.png">menu2h.png</A></TT>
+    <TT><A href="menu2s.png">menu2s.png</A></TT>
+    <TT><A href="menu3i.png">menu3i.png</A></TT>
+    <TT><A href="menu3h.png">menu3h.png</A></TT>
+    <TT><A href="menu3s.png">menu3s.png</A></TT>
+    <TT><A href="menu4i.png">menu4i.png</A></TT>
+    <TT><A href="menu4h.png">menu4h.png</A></TT>
+    <TT><A href="menu4s.png">menu4s.png</A></TT>
+    <TT><A href="menu5i.png">menu5i.png</A></TT>
+    <TT><A href="menu5h.png">menu5h.png</A></TT>
+    <TT><A href="menu5s.png">menu5s.png</A></TT>
+</UL>
+<UL>
+  <LI>All files (except <TT>*.mpg</TT> and <TT>*.iso</TT>) in a single
+    archive:
+    <TT><A HREF="dvdauthor-howto.tar.gz">dvdauthor-howto.tar.gz</A></TT>
+</UL>
+
+<H3><A NAME="clock">The clock</A></H3>
+<P>
+  In case you're interested to know how I created the tracks, here are
+  the relevant files:
+</P>
+<UL>
+  <LI>Base SVG files (created
+    with <A HREF="https://inkscape.org/">Inkscape</A>):
+    <TT><A HREF="clock/clock.svg">clock.svg</A></TT>
+    <TT><A HREF="clock/menu.svg">menu.svg</A></TT>
+</UL>
+<UL>
+  <LI>Images for every second (open <TT>clock.svg</TT> with Inkscape,
+    rotate the hand and export to PNG):
+    <TT><A HREF="clock/clock00.png">clock00.png</A></TT>
+    <TT><A HREF="clock/clock01.png">clock01.png</A></TT>
+    <TT><A HREF="clock/clock02.png">clock02.png</A></TT>
+    <TT><A HREF="clock/clock03.png">clock03.png</A></TT>
+    <TT><A HREF="clock/clock04.png">clock04.png</A></TT>
+    <TT><A HREF="clock/clock05.png">clock05.png</A></TT>
+    <TT><A HREF="clock/clock06.png">clock06.png</A></TT>
+    <TT><A HREF="clock/clock07.png">clock07.png</A></TT>
+    <TT><A HREF="clock/clock08.png">clock08.png</A></TT>
+    <TT><A HREF="clock/clock09.png">clock09.png</A></TT>
+    <TT><A HREF="clock/clock10.png">clock10.png</A></TT>
+    <TT><A HREF="clock/clock11.png">clock11.png</A></TT>
+    <TT><A HREF="clock/clock12.png">clock12.png</A></TT>
+    <TT><A HREF="clock/clock13.png">clock13.png</A></TT>
+    <TT><A HREF="clock/clock14.png">clock14.png</A></TT>
+    <TT><A HREF="clock/clock15.png">clock15.png</A></TT>
+    <TT><A HREF="clock/clock16.png">clock16.png</A></TT>
+    <TT><A HREF="clock/clock17.png">clock17.png</A></TT>
+    <TT><A HREF="clock/clock18.png">clock18.png</A></TT>
+    <TT><A HREF="clock/clock19.png">clock19.png</A></TT>
+    <TT><A HREF="clock/clock20.png">clock20.png</A></TT>
+    <TT><A HREF="clock/clock21.png">clock21.png</A></TT>
+    <TT><A HREF="clock/clock22.png">clock22.png</A></TT>
+    <TT><A HREF="clock/clock23.png">clock23.png</A></TT>
+    <TT><A HREF="clock/clock24.png">clock24.png</A></TT>
+    <TT><A HREF="clock/clock25.png">clock25.png</A></TT>
+    <TT><A HREF="clock/clock26.png">clock26.png</A></TT>
+    <TT><A HREF="clock/clock27.png">clock27.png</A></TT>
+    <TT><A HREF="clock/clock28.png">clock28.png</A></TT>
+    <TT><A HREF="clock/clock29.png">clock29.png</A></TT>
+    <TT><A HREF="clock/clock30.png">clock30.png</A></TT>
+    <TT><A HREF="clock/clock31.png">clock31.png</A></TT>
+    <TT><A HREF="clock/clock32.png">clock32.png</A></TT>
+    <TT><A HREF="clock/clock33.png">clock33.png</A></TT>
+    <TT><A HREF="clock/clock34.png">clock34.png</A></TT>
+    <TT><A HREF="clock/clock35.png">clock35.png</A></TT>
+    <TT><A HREF="clock/clock36.png">clock36.png</A></TT>
+    <TT><A HREF="clock/clock37.png">clock37.png</A></TT>
+    <TT><A HREF="clock/clock38.png">clock38.png</A></TT>
+    <TT><A HREF="clock/clock39.png">clock39.png</A></TT>
+    <TT><A HREF="clock/clock40.png">clock40.png</A></TT>
+    <TT><A HREF="clock/clock41.png">clock41.png</A></TT>
+    <TT><A HREF="clock/clock42.png">clock42.png</A></TT>
+    <TT><A HREF="clock/clock43.png">clock43.png</A></TT>
+    <TT><A HREF="clock/clock44.png">clock44.png</A></TT>
+    <TT><A HREF="clock/clock45.png">clock45.png</A></TT>
+    <TT><A HREF="clock/clock46.png">clock46.png</A></TT>
+    <TT><A HREF="clock/clock47.png">clock47.png</A></TT>
+    <TT><A HREF="clock/clock48.png">clock48.png</A></TT>
+    <TT><A HREF="clock/clock49.png">clock49.png</A></TT>
+    <TT><A HREF="clock/clock50.png">clock50.png</A></TT>
+    <TT><A HREF="clock/clock51.png">clock51.png</A></TT>
+    <TT><A HREF="clock/clock52.png">clock52.png</A></TT>
+    <TT><A HREF="clock/clock53.png">clock53.png</A></TT>
+    <TT><A HREF="clock/clock54.png">clock54.png</A></TT>
+    <TT><A HREF="clock/clock55.png">clock55.png</A></TT>
+    <TT><A HREF="clock/clock56.png">clock56.png</A></TT>
+    <TT><A HREF="clock/clock57.png">clock57.png</A></TT>
+    <TT><A HREF="clock/clock58.png">clock58.png</A></TT>
+    <TT><A HREF="clock/clock59.png">clock59.png</A></TT>
+    <TT><A HREF="clock/clock60.png">clock60.png</A></TT>
+</UL>
+<UL>
+  <LI>Images for menus (open <TT>menu.svg</TT> with Inkscape, change
+    the text and export to PNG):
+    <TT><A HREF="clock/menu1.png">menu1.png</A></TT>
+    <TT><A HREF="clock/menu2.png">menu2.png</A></TT>
+    <TT><A HREF="clock/menu3.png">menu3.png</A></TT>
+    <TT><A HREF="clock/menu4.png">menu4.png</A></TT>
+    <TT><A HREF="clock/menu5.png">menu5.png</A></TT>
+</UL>
+<UL>
+  <LI>Audio files (created
+    with <A HREF="http://sox.sourceforge.net/">sox</A>):
+    <TT><A HREF="clock/ten.wav">ten.wav</A></TT>
+    <TT><A HREF="clock/quarter.wav">quarter.wav</A></TT>
+    <TT><A HREF="clock/half.wav">half.wav</A></TT>
+</UL>
+<UL>
+  <LI>List of commands used to create the tracks:
+    <TT><A HREF="clock/clock.txt">clock.txt</A></TT>
+</UL>
+<UL>
+  <LI>All files (except <TT>*.wav</TT>) in a single archive:
+    <TT><A HREF="clock.tar.gz">clock.tar.gz</A></TT>
+</UL>
+<P>
+  Note: the menu video files created here (except <TT>menu1.mpg</TT>)
+  must be ran through spumux in order to obtain the actual menu files
+  (with buttons) used in the examples.
+</P>
+
+<HR>
+<P>
+  Last modification: 25 Apr 2018
+<P>
+  Copyright (C) 2018 Gerardo Ballabio
+<P>
+  Permission is granted to copy, distribute and/or modify this
+  document under the terms of the GNU Free Documentation License,
+  Version 1.3 or any later version published by the Free Software
+  Foundation; with no Invariant Sections, no Front-Cover Texts, and no
+  Back-Cover Texts.
+  A copy of the license is included in the section
+  entitled <A HREF="fdl.txt">"GNU Free Documentation License"</A>.
+</P>
+
+</BODY>
+</HTML>

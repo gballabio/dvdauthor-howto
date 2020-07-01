@@ -1,0 +1,33 @@
+<dvdauthor dest="example09">
+  <vmgm>
+    <menus>
+      <pgc>
+        <vob file="menu4.mpg" />
+        <button>jump titleset 1 menu;</button>
+        <button>jump title 1;</button>
+        <post>jump menu 1;</post>
+      </pgc>
+    </menus>
+  </vmgm>
+  <titleset>
+    <menus>
+      <pgc>
+        <vob file="menu3.mpg" />
+        <button>jump title 1 chapter 1;</button>
+        <button>jump title 1 chapter 2;</button>
+        <button>jump title 1 chapter 3;</button>
+        <button>jump title 1 chapter 4;</button>
+        <post>jump titleset 1 menu;</post>
+      </pgc>
+    </menus>
+    <titles>
+      <pgc>
+        <vob file="track01.mpg" />
+        <vob file="track02.mpg" />
+        <vob file="track03.mpg" />
+        <vob file="track04.mpg" />
+        <post>call vmgm menu;</post>
+      </pgc>
+    </titles>
+  </titleset>
+</dvdauthor>

@@ -1,0 +1,18 @@
+<dvdauthor dest="example05">
+  <vmgm>
+    <menus>
+      <pgc>
+        <vob file="menu1.mpg" />
+        <post>jump title 1;</post>
+      </pgc>
+    </menus>
+  </vmgm>
+  <titleset>
+    <titles>
+      <pgc>
+        <vob file="track01.mpg" />
+        <post>call vmgm menu;</post>
+      </pgc>
+    </titles>
+  </titleset>
+</dvdauthor>

@@ -1,0 +1,8 @@
+<subpictures>
+  <stream>
+    <spu force="yes"
+         image="menu2i.png" highlight="menu2h.png" select="menu2s.png"
+         autooutline="infer" outlinewidth="6" autoorder="rows">
+    </spu>
+  </stream>
+</subpictures>

@@ -1,0 +1,10 @@
+<dvdauthor dest="example01">
+  <vmgm />
+  <titleset>
+    <titles>
+      <pgc>
+        <vob file="track01.mpg" />
+      </pgc>
+    </titles>
+  </titleset>
+</dvdauthor>

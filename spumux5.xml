@@ -1,0 +1,9 @@
+<subpictures>
+  <stream>
+    <spu force="yes"
+         image="menu5i.png" highlight="menu5h.png" select="menu5s.png">
+      <button x0="0" y0="376" x1="720" y1="440" />
+      <button x0="0" y0="440" x1="720" y1="504" />
+    </spu>
+  </stream>
+</subpictures>
